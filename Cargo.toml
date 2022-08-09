@@ -5,6 +5,7 @@ members = [
 	"frame/ethereum",
 	"frame/evm",
 	"frame/evm-chain-id",
+	"frame/evm-auditor",
 	"frame/hotfix-sufficients",
 	"frame/evm/precompile/sha3fips",
 	"frame/evm/precompile/simple",

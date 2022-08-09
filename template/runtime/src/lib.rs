@@ -119,7 +119,7 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
 	spec_name: create_runtime_str!("node-frontier-template"),
 	impl_name: create_runtime_str!("node-frontier-template"),
 	authoring_version: 1,
-	spec_version: 1,
+	spec_version: 2,
 	impl_version: 1,
 	apis: RUNTIME_API_VERSIONS,
 	transaction_version: 1,
@@ -328,6 +328,130 @@ parameter_types! {
 	pub PrecompilesValue: FrontierPrecompiles<Runtime> = FrontierPrecompiles::<_>::new();
 }
 
+use fp_evm::{CallInfo, CreateInfo};
+use pallet_evm::{runner::Runner as RunnerT, runner::RunnerError};
+pub struct CustomRunner<T: pallet_evm::Config> {
+	_marker: PhantomData<T>,
+}
+impl<T: pallet_evm::Config> RunnerT<T> for CustomRunner<T>
+where
+	pallet_evm::BalanceOf<T>: TryFrom<U256> + Into<U256>,
+{
+	type Error = pallet_evm::Error<T>;
+	fn validate(
+		source: H160,
+		target: Option<H160>,
+		input: Vec<u8>,
+		value: U256,
+		gas_limit: u64,
+		max_fee_per_gas: Option<U256>,
+		max_priority_fee_per_gas: Option<U256>,
+		nonce: Option<U256>,
+		access_list: Vec<(H160, Vec<H256>)>,
+		is_transactional: bool,
+		evm_config: &evm::Config,
+	) -> Result<(), RunnerError<Self::Error>> {
+		return <pallet_evm::runner::stack::Runner<T> as pallet_evm::runner::Runner<T>>::validate(
+			source,
+			target,
+			input,
+			value,
+			gas_limit,
+			max_fee_per_gas,
+			max_priority_fee_per_gas,
+			nonce,
+			access_list,
+			is_transactional,
+			evm_config,
+		);
+	}
+	fn call(
+		source: H160,
+		target: H160,
+		input: Vec<u8>,
+		value: U256,
+		gas_limit: u64,
+		max_fee_per_gas: Option<U256>,
+		max_priority_fee_per_gas: Option<U256>,
+		nonce: Option<U256>,
+		access_list: Vec<(H160, Vec<H256>)>,
+		is_transactional: bool,
+		validate: bool,
+		config: &evm::Config,
+	) -> Result<CallInfo, RunnerError<Self::Error>> {
+		return <pallet_evm::runner::stack::Runner<T>>::call(
+			source,
+			target,
+			input,
+			value,
+			gas_limit,
+			max_fee_per_gas,
+			max_priority_fee_per_gas,
+			nonce,
+			access_list,
+			is_transactional,
+			validate,
+			config,
+		);
+	}
+	fn create(
+		source: H160,
+		init: Vec<u8>,
+		value: U256,
+		gas_limit: u64,
+		max_fee_per_gas: Option<U256>,
+		max_priority_fee_per_gas: Option<U256>,
+		nonce: Option<U256>,
+		access_list: Vec<(H160, Vec<H256>)>,
+		is_transactional: bool,
+		validate: bool,
+		config: &evm::Config,
+	) -> Result<CreateInfo, RunnerError<Self::Error>> {
+		return <pallet_evm::runner::stack::Runner<T> as pallet_evm::runner::Runner<T>>::create(
+			source,
+			init,
+			value,
+			gas_limit,
+			max_fee_per_gas,
+			max_priority_fee_per_gas,
+			nonce,
+			access_list,
+			is_transactional,
+			validate,
+			config,
+		);
+	}
+	fn create2(
+		source: H160,
+		init: Vec<u8>,
+		salt: H256,
+		value: U256,
+		gas_limit: u64,
+		max_fee_per_gas: Option<U256>,
+		max_priority_fee_per_gas: Option<U256>,
+		nonce: Option<U256>,
+		access_list: Vec<(H160, Vec<H256>)>,
+		is_transactional: bool,
+		validate: bool,
+		config: &evm::Config,
+	) -> Result<CreateInfo, RunnerError<Self::Error>> {
+		return <pallet_evm::runner::stack::Runner<T> as pallet_evm::runner::Runner<T>>::create2(
+			source,
+			init,
+			salt,
+			value,
+			gas_limit,
+			max_fee_per_gas,
+			max_priority_fee_per_gas,
+			nonce,
+			access_list,
+			is_transactional,
+			validate,
+			config,
+		);
+	}
+}
+
 impl pallet_evm::Config for Runtime {
 	type FeeCalculator = BaseFee;
 	type GasWeightMapping = FixedGasWeightMapping;
@@ -341,7 +465,9 @@ impl pallet_evm::Config for Runtime {
 	type PrecompilesValue = PrecompilesValue;
 	type ChainId = EVMChainId;
 	type BlockGasLimit = BlockGasLimit;
-	type Runner = pallet_evm::runner::stack::Runner<Self>;
+	//type Runner = pallet_evm::runner::stack::Runner<Self>;
+	//type Runner =CustomRunner<Self>;
+	type Runner=pallet_evm_auditor::AuditRunner<Self>;
 	type OnChargeTransaction = ();
 	type FindAuthor = FindAuthorTruncated<Aura>;
 }
@@ -388,6 +514,13 @@ impl pallet_hotfix_sufficients::Config for Runtime {
 	type AddressMapping = HashedAddressMapping<BlakeTwo256>;
 	type WeightInfo = pallet_hotfix_sufficients::weights::SubstrateWeight<Runtime>;
 }
+parameter_types! {
+	pub Banned: H160 = H160::default();
+}
+impl pallet_evm_auditor::Config for Runtime {
+	type Event = Event;
+	type Banned = Banned;
+}
 
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(
@@ -409,6 +542,8 @@ construct_runtime!(
 		DynamicFee: pallet_dynamic_fee,
 		BaseFee: pallet_base_fee,
 		HotfixSufficients: pallet_hotfix_sufficients,
+
+		EVMAuditor: pallet_evm_auditor,
 	}
 );
 

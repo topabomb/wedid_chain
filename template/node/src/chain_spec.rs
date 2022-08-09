@@ -59,7 +59,7 @@ pub fn development_config() -> Result<ChainSpec, String> {
 				],
 				// Initial PoA authorities
 				vec![authority_keys_from_seed("Alice")],
-				42,
+				1942,
 			)
 		},
 		// Bootnodes
@@ -109,8 +109,9 @@ pub fn local_testnet_config() -> Result<ChainSpec, String> {
 				vec![
 					authority_keys_from_seed("Alice"),
 					authority_keys_from_seed("Bob"),
+					authority_keys_from_seed("Charlie"),
 				],
-				42,
+				1942,
 			)
 		},
 		// Bootnodes
@@ -217,11 +218,23 @@ fn testnet_genesis(
 						code: vec![0x00],
 					},
 				);
+				map.insert(
+					// 指定一个新地址
+					H160::from_str("0x3A5cF02ff066738009b7B4D47525CF766e5eCb47")
+						.expect("internal H160 is valid; qed"),
+					fp_evm::GenesisAccount {
+						nonce: U256::from(1),
+						balance: U256::from(1_000_000_000_000_000_000_000_000u128),
+						storage: Default::default(),
+						code: vec![0x00],
+					},
+				);
 				map
 			},
 		},
 		ethereum: Default::default(),
 		dynamic_fee: Default::default(),
 		base_fee: Default::default(),
+		evm_auditor:Default::default(),
 	}
 }

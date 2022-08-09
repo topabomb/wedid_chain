@@ -1,0 +1,51 @@
+[package]
+name = "pallet-evm-auditor"
+version = "1.0.0-dev"
+authors = ["Parity Technologies <admin@parity.io>"]
+edition = "2021"
+license = "Apache-2.0"
+readme = "README.md"
+description = "EVM chain id storage pallet"
+repository = "https://github.com/paritytech/frontier/"
+
+[package.metadata.docs.rs]
+targets = ["x86_64-unknown-linux-gnu"]
+
+[dependencies]
+
+# Parity
+codec = { package = "parity-scale-codec", version = "3.1", default-features = false, features = ["derive"] }
+scale-info = { version = "2.1", default-features = false, features = ["derive"] }
+
+# Substrate FRAME
+frame-support = { version = "4.0.0-dev", git = "https://github.com/paritytech/substrate", branch = "master", default-features = false }
+frame-system = { version = "4.0.0-dev", git = "https://github.com/paritytech/substrate", branch = "master", default-features = false }
+
+sp-core = { version = "6.0.0", git = "https://github.com/paritytech/substrate", branch = "master", default-features = false }
+sp-io = { version = "6.0.0", git = "https://github.com/paritytech/substrate", branch = "master", default-features = false }
+sp-runtime = { version = "6.0.0", git = "https://github.com/paritytech/substrate", branch = "master", default-features = false }
+sp-std = { version = "4.0.0", git = "https://github.com/paritytech/substrate", branch = "master", default-features = false }
+log = { version = "0.4.17", default-features = false }
+evm = { git = "https://github.com/rust-blockchain/evm", rev = "01bcbd2205a212c34451d3b4fabc962793b057d3", default-features = false, features = ["with-codec"] }
+fp-evm = { version = "3.0.0-dev", path = "../../primitives/evm", default-features = false }
+pallet-evm = { path = "../../frame/evm", default-features = false }
+[features]
+default = ["std"]
+std = [
+	# Parity
+	"codec/std",
+	"scale-info/std",
+	# Substrate FRAME
+	"frame-support/std",
+	"frame-system/std",
+
+	"sp-core/std",
+	"sp-io/std",
+	"sp-runtime/std",
+	"sp-std/std",
+	"log/std",
+	"evm/std",
+	"fp-evm/std",
+	"pallet-evm/std",
+]
+try-runtime = ["frame-support/try-runtime"]
