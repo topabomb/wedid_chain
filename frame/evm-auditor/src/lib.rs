@@ -32,9 +32,10 @@ pub use pallet::*;
 use sp_std::{collections::btree_set::BTreeSet, iter::FromIterator, prelude::*};
 use sp_core::{H160, H256, U256};
 
+use evm::{ExitError, ExitReason};
 use fp_evm::{CallInfo, CreateInfo};
 use pallet_evm::{runner::Runner as RunnerT, runner::RunnerError};
-
+use hex::{FromHex,ToHex};
 
 #[frame_support::pallet]
 pub mod pallet {
@@ -148,9 +149,50 @@ pub mod pallet {
 			validate: bool,
 			config: &evm::Config,
 		) -> Result<CallInfo, RunnerError<Self::Error>> {
-			let (source_account,_)=pallet_evm::Pallet::<T>::account_basic(&source);
-			let (target_account,_)=pallet_evm::Pallet::<T>::account_basic(&target);
-			pallet::Pallet::<T>::audit_call_inner(source,target,input.clone(),is_transactional);
+			if is_transactional{
+				let source_empty=pallet_evm::Pallet::<T>::is_account_empty(&source);
+				let target_empty=pallet_evm::Pallet::<T>::is_account_empty(&target);
+				if !target_empty {
+					let banned=pallet::Pallet::<T>::get_banned_inner();
+					if target!=banned{
+						let target_bytes=target.as_fixed_bytes();
+						//97f735d5000000000000000000000000=function isBanned(address dapp) public view returns (bool)
+						let func_bytes = <[u8; 16]>::from_hex("97f735d5000000000000000000000000").expect("Hex decoding failed");
+						let banned_input:Vec<u8>=[func_bytes.to_vec(),target_bytes.to_vec()].concat();
+
+						let info=match <pallet_evm::runner::stack::Runner<T>>::call(
+							H160::default(),
+							banned,
+							banned_input.clone(),
+							U256::default(),
+							75000000,
+							Option::None,
+							Option::None,
+							Option::None,
+							Vec::with_capacity(0),
+							false,
+							true,
+							config,
+						){
+							Ok(info) => info,
+							Err(e) => {
+								return Err(e);
+							}
+						};
+						let resp=info.value;
+						if resp.len()>0&&resp[resp.len()-1]>0 {
+							log::error!("❌ Banned it! result.value({:?}),banned({}),source:{} target:{},is_transactional({})",resp,banned,source,target,is_transactional);
+							return Ok(CallInfo{
+								exit_reason:ExitReason::Error(ExitError::InvalidCode),
+								used_gas:U256::default(),
+								value:Vec::new(),
+								logs:Vec::new(),
+							})
+						}
+						log::warn!("✅ Evm call: banned({}),source:{} target:{},is_transactional({}),gas_limit({}),max_fee_per_gas({:?}),max_priority_fee_per_gas({:?}),nonce({:?})",banned,source,target,is_transactional,gas_limit,max_fee_per_gas,max_priority_fee_per_gas,nonce);
+					}
+				}
+			}
 			return <pallet_evm::runner::stack::Runner<T>>::call(
 				source,
 				target,
@@ -228,11 +270,8 @@ pub mod pallet {
 			<Banned<T>>::put(value);
 			T::DbWeight::get().write
 		}
-		pub fn audit_call_inner(source:H160,target:H160,input: Vec<u8>,is_transactional: bool){
-			log::error!(
-				target: "evm-auditor",
-				"banned({}),source:{} target:{},input:({:?}),is_transactional({})",<Banned<T>>::get(),source,target,input,is_transactional);
-
+		pub fn get_banned_inner() -> H160{
+			<Banned<T>>::get()
 		}
 	}
 }

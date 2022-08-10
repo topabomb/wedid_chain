@@ -29,6 +29,7 @@ log = { version = "0.4.17", default-features = false }
 evm = { git = "https://github.com/rust-blockchain/evm", rev = "01bcbd2205a212c34451d3b4fabc962793b057d3", default-features = false, features = ["with-codec"] }
 fp-evm = { version = "3.0.0-dev", path = "../../primitives/evm", default-features = false }
 pallet-evm = { path = "../../frame/evm", default-features = false }
+hex = { version = "0.4", default-features = false }
 [features]
 default = ["std"]
 std = [
@@ -47,5 +48,6 @@ std = [
 	"evm/std",
 	"fp-evm/std",
 	"pallet-evm/std",
+	"hex/std",
 ]
 try-runtime = ["frame-support/try-runtime"]
