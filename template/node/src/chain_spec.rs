@@ -224,7 +224,8 @@ fn testnet_genesis(
 						.expect("internal H160 is valid; qed"),
 					fp_evm::GenesisAccount {
 						nonce: U256::from(1),
-						balance: U256::from(1_000_000_000_000_000_000_000_000u128),
+						balance: U256::from_str("0xffffffffffffffffffffffffffffffff")
+							.expect("internal U256 is valid; qed"),
 						storage: Default::default(),
 						code: vec![0x00],
 					},
