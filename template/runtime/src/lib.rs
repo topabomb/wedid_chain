@@ -24,7 +24,7 @@ use sp_runtime::{
 	create_runtime_str, generic, impl_opaque_keys,
 	traits::{
 		AccountIdLookup, BlakeTwo256, Block as BlockT, DispatchInfoOf, Dispatchable, Get,
-		IdentifyAccount, NumberFor, PostDispatchInfoOf, UniqueSaturatedInto, Verify,
+		IdentifyAccount, NumberFor, PostDispatchInfoOf, UniqueSaturatedInto, Verify,OpaqueKeys,
 	},
 	transaction_validity::{TransactionSource, TransactionValidity, TransactionValidityError},
 	ApplyExtrinsicResult, MultiSignature,
@@ -65,6 +65,7 @@ pub use sp_runtime::{Perbill, Permill};
 mod precompiles;
 use precompiles::FrontierPrecompiles;
 
+use frame_system::EnsureRoot;
 /// Type of block number.
 pub type BlockNumber = u32;
 
@@ -116,10 +117,10 @@ pub mod opaque {
 }
 
 pub const VERSION: RuntimeVersion = RuntimeVersion {
-	spec_name: create_runtime_str!("node-frontier-template"),
-	impl_name: create_runtime_str!("node-frontier-template"),
+	spec_name: create_runtime_str!("wedid_chain_template"),
+	impl_name: create_runtime_str!("wedid_chain_template by topabomb"),
 	authoring_version: 1,
-	spec_version: 2,
+	spec_version: 4,
 	impl_version: 1,
 	apis: RUNTIME_API_VERSIONS,
 	transaction_version: 1,
@@ -327,131 +328,6 @@ parameter_types! {
 	pub BlockGasLimit: U256 = U256::from(NORMAL_DISPATCH_RATIO * MAXIMUM_BLOCK_WEIGHT / WEIGHT_PER_GAS);
 	pub PrecompilesValue: FrontierPrecompiles<Runtime> = FrontierPrecompiles::<_>::new();
 }
-
-use fp_evm::{CallInfo, CreateInfo};
-use pallet_evm::{runner::Runner as RunnerT, runner::RunnerError};
-pub struct CustomRunner<T: pallet_evm::Config> {
-	_marker: PhantomData<T>,
-}
-impl<T: pallet_evm::Config> RunnerT<T> for CustomRunner<T>
-where
-	pallet_evm::BalanceOf<T>: TryFrom<U256> + Into<U256>,
-{
-	type Error = pallet_evm::Error<T>;
-	fn validate(
-		source: H160,
-		target: Option<H160>,
-		input: Vec<u8>,
-		value: U256,
-		gas_limit: u64,
-		max_fee_per_gas: Option<U256>,
-		max_priority_fee_per_gas: Option<U256>,
-		nonce: Option<U256>,
-		access_list: Vec<(H160, Vec<H256>)>,
-		is_transactional: bool,
-		evm_config: &evm::Config,
-	) -> Result<(), RunnerError<Self::Error>> {
-		return <pallet_evm::runner::stack::Runner<T> as pallet_evm::runner::Runner<T>>::validate(
-			source,
-			target,
-			input,
-			value,
-			gas_limit,
-			max_fee_per_gas,
-			max_priority_fee_per_gas,
-			nonce,
-			access_list,
-			is_transactional,
-			evm_config,
-		);
-	}
-	fn call(
-		source: H160,
-		target: H160,
-		input: Vec<u8>,
-		value: U256,
-		gas_limit: u64,
-		max_fee_per_gas: Option<U256>,
-		max_priority_fee_per_gas: Option<U256>,
-		nonce: Option<U256>,
-		access_list: Vec<(H160, Vec<H256>)>,
-		is_transactional: bool,
-		validate: bool,
-		config: &evm::Config,
-	) -> Result<CallInfo, RunnerError<Self::Error>> {
-		return <pallet_evm::runner::stack::Runner<T>>::call(
-			source,
-			target,
-			input,
-			value,
-			gas_limit,
-			max_fee_per_gas,
-			max_priority_fee_per_gas,
-			nonce,
-			access_list,
-			is_transactional,
-			validate,
-			config,
-		);
-	}
-	fn create(
-		source: H160,
-		init: Vec<u8>,
-		value: U256,
-		gas_limit: u64,
-		max_fee_per_gas: Option<U256>,
-		max_priority_fee_per_gas: Option<U256>,
-		nonce: Option<U256>,
-		access_list: Vec<(H160, Vec<H256>)>,
-		is_transactional: bool,
-		validate: bool,
-		config: &evm::Config,
-	) -> Result<CreateInfo, RunnerError<Self::Error>> {
-		return <pallet_evm::runner::stack::Runner<T> as pallet_evm::runner::Runner<T>>::create(
-			source,
-			init,
-			value,
-			gas_limit,
-			max_fee_per_gas,
-			max_priority_fee_per_gas,
-			nonce,
-			access_list,
-			is_transactional,
-			validate,
-			config,
-		);
-	}
-	fn create2(
-		source: H160,
-		init: Vec<u8>,
-		salt: H256,
-		value: U256,
-		gas_limit: u64,
-		max_fee_per_gas: Option<U256>,
-		max_priority_fee_per_gas: Option<U256>,
-		nonce: Option<U256>,
-		access_list: Vec<(H160, Vec<H256>)>,
-		is_transactional: bool,
-		validate: bool,
-		config: &evm::Config,
-	) -> Result<CreateInfo, RunnerError<Self::Error>> {
-		return <pallet_evm::runner::stack::Runner<T> as pallet_evm::runner::Runner<T>>::create2(
-			source,
-			init,
-			salt,
-			value,
-			gas_limit,
-			max_fee_per_gas,
-			max_priority_fee_per_gas,
-			nonce,
-			access_list,
-			is_transactional,
-			validate,
-			config,
-		);
-	}
-}
-
 impl pallet_evm::Config for Runtime {
 	type FeeCalculator = BaseFee;
 	type GasWeightMapping = FixedGasWeightMapping;
@@ -466,7 +342,6 @@ impl pallet_evm::Config for Runtime {
 	type ChainId = EVMChainId;
 	type BlockGasLimit = BlockGasLimit;
 	//type Runner = pallet_evm::runner::stack::Runner<Self>;
-	//type Runner =CustomRunner<Self>;
 	type Runner=pallet_evm_auditor::AuditRunner<Self>;
 	type OnChargeTransaction = ();
 	type FindAuthor = FindAuthorTruncated<Aura>;
@@ -521,7 +396,31 @@ impl pallet_evm_auditor::Config for Runtime {
 	type Event = Event;
 	type Banned = Banned;
 }
+parameter_types! {
+	pub const MinAuthorities: u32 = 2;
+}
 
+impl validator_set::Config for Runtime {
+	type Event = Event;
+	type AddRemoveOrigin = EnsureRoot<AccountId>;
+	type MinAuthorities = MinAuthorities;
+}
+parameter_types! {
+	pub const Period: u32 = 1 * MINUTES;//每Session的大约事件
+	pub const Offset: u32 = 0;
+}
+
+impl pallet_session::Config for Runtime {
+	type ValidatorId = <Self as frame_system::Config>::AccountId;
+	type ValidatorIdOf = validator_set::ValidatorOf<Self>;
+	type ShouldEndSession = pallet_session::PeriodicSessions<Period, Offset>;
+	type NextSessionRotation = pallet_session::PeriodicSessions<Period, Offset>;
+	type SessionManager = ValidatorSet;
+	type SessionHandler = <opaque::SessionKeys as OpaqueKeys>::KeyTypeIdProviders;
+	type Keys = opaque::SessionKeys;
+	type WeightInfo = ();
+	type Event = Event;
+}
 // Create the runtime by composing the FRAME pallets that were previously configured.
 construct_runtime!(
 	pub enum Runtime where
@@ -531,9 +430,11 @@ construct_runtime!(
 	{
 		System: frame_system,
 		Timestamp: pallet_timestamp,
+		Balances: pallet_balances,
+		ValidatorSet: validator_set::{Pallet, Call, Storage, Event<T>, Config<T>},
+		Session: pallet_session::{Pallet, Call, Storage, Event, Config<T>},
 		Aura: pallet_aura,
 		Grandpa: pallet_grandpa,
-		Balances: pallet_balances,
 		TransactionPayment: pallet_transaction_payment,
 		Sudo: pallet_sudo,
 		Ethereum: pallet_ethereum,

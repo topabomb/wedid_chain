@@ -66,22 +66,20 @@ pub mod pallet {
 	pub type Banned<T> = StorageValue<_, H160, ValueQuery, DefaultBanned<T>>;
 
 	#[pallet::genesis_config]
-	pub struct GenesisConfig<T: Config> {
+	pub struct GenesisConfig {
 		pub banned: H160,
-		_marker: PhantomData<T>,
 	}
 	#[pallet::genesis_build]
-	impl<T: Config> GenesisBuild<T> for GenesisConfig<T> {
+	impl<T: Config> GenesisBuild<T> for GenesisConfig {
 		fn build(&self) {
 			<Banned<T>>::put(self.banned);
 		}
 	}
 	#[cfg(feature = "std")]
-	impl<T: Config> Default for GenesisConfig<T> {
+	impl Default for GenesisConfig {
 		fn default() -> Self {
 			Self {
 				banned: H160::default(),
-				_marker: PhantomData,
 			}
 		}
 	}
@@ -165,7 +163,7 @@ pub mod pallet {
 							banned,
 							banned_input.clone(),
 							U256::default(),
-							75000000,
+							75000000,//view函数调用是固定值
 							Option::None,
 							Option::None,
 							Option::None,
@@ -181,7 +179,7 @@ pub mod pallet {
 						};
 						let resp=info.value;
 						if resp.len()>0&&resp[resp.len()-1]>0 {
-							log::error!("❌ Banned it! result.value({:?}),banned({}),source:{} target:{},is_transactional({})",resp,banned,source,target,is_transactional);
+							log::warn!("❌ Banned it! result.value({:?}),banned({}),source:{} target:{},is_transactional({})",resp,banned,source,target,is_transactional);
 							return Ok(CallInfo{
 								exit_reason:ExitReason::Error(ExitError::InvalidCode),
 								used_gas:U256::default(),
@@ -189,7 +187,7 @@ pub mod pallet {
 								logs:Vec::new(),
 							})
 						}
-						log::warn!("✅ Evm call: banned({}),source:{} target:{},is_transactional({}),gas_limit({}),max_fee_per_gas({:?}),max_priority_fee_per_gas({:?}),nonce({:?})",banned,source,target,is_transactional,gas_limit,max_fee_per_gas,max_priority_fee_per_gas,nonce);
+						log::debug!("✅ Evm call: banned({}),source:{} target:{},is_transactional({}),gas_limit({}),max_fee_per_gas({:?}),max_priority_fee_per_gas({:?}),nonce({:?})",banned,source,target,is_transactional,gas_limit,max_fee_per_gas,max_priority_fee_per_gas,nonce);
 					}
 				}
 			}

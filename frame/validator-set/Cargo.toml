@@ -1,0 +1,106 @@
+[package]
+name = 'substrate-validator-set'
+version = '0.9.27'
+authors = ['Gautam Dhameja <quasijatt@outlook.com>']
+edition = '2021'
+license = 'Apache-2.0'
+repository = 'https://github.com/gautamdhameja/substrate-validator-set'
+
+[dev-dependencies.serde]
+features = ['derive']
+version = '1.0.143'
+
+[dependencies.sp-core]
+default-features = false
+git = 'https://github.com/paritytech/substrate.git'
+version = "6.0.0"
+branch = "master"
+
+
+[dependencies.sp-io]
+default-features = false
+git = 'https://github.com/paritytech/substrate.git'
+version = "6.0.0"
+branch = "master"
+
+[dependencies.sp-runtime]
+default-features = false
+git = 'https://github.com/paritytech/substrate.git'
+version = "6.0.0"
+branch = "master"
+
+[dependencies.sp-std]
+default-features = false
+git = 'https://github.com/paritytech/substrate.git'
+version = "4.0.0-dev"
+branch = "master"
+
+[dependencies.sp-staking]
+default-features = false
+git = 'https://github.com/paritytech/substrate.git'
+version = "4.0.0-dev"
+branch = "master"
+
+[dependencies.log]
+default-features = false
+version = '0.4.17'
+
+[dependencies.codec]
+default-features = false
+features = ['derive']
+package = 'parity-scale-codec'
+version = '3.1'
+
+[dependencies.frame-benchmarking]
+default-features = false
+git = 'https://github.com/paritytech/substrate.git'
+optional = true
+version = "4.0.0-dev"
+branch = "master"
+
+[dependencies.frame-support]
+default-features = false
+git = 'https://github.com/paritytech/substrate.git'
+version = "4.0.0-dev"
+branch = "master"
+
+
+[dependencies.frame-system]
+default-features = false
+git = 'https://github.com/paritytech/substrate.git'
+version = "4.0.0-dev"
+branch = "master"
+
+
+[dependencies.pallet-session]
+default-features = false
+features = ['historical']
+git = 'https://github.com/paritytech/substrate.git'
+version = "4.0.0-dev"
+branch = "master"
+
+
+[dependencies.scale-info]
+default-features = false
+features = ['derive']
+version = '2.1.2'
+
+[dependencies.syn]
+version = '1.0.98'
+
+[features]
+default = ['std']
+runtime-benchmarks = ['frame-benchmarking']
+std = [
+    'codec/std',
+    'frame-benchmarking/std',
+    'frame-support/std',
+    'frame-system/std',
+    'scale-info/std',
+    'sp-core/std',
+    'sp-io/std',
+    'sp-std/std',
+    'sp-runtime/std',
+    'pallet-session/std'
+]
+try-runtime = ['frame-support/try-runtime']

@@ -64,6 +64,8 @@ pallet-hotfix-sufficients = { path = "../../frame/hotfix-sufficients", default-f
 evm = { git = "https://github.com/rust-blockchain/evm", rev = "01bcbd2205a212c34451d3b4fabc962793b057d3", default-features = false, features = ["with-codec"] }
 fp-evm = { version = "3.0.0-dev", path = "../../primitives/evm", default-features = false }
 pallet-evm-auditor = { path = "../../frame/evm-auditor", default-features = false }
+pallet-session = { version = "4.0.0-dev", git = "https://github.com/paritytech/substrate", branch = "master", default-features = false }
+validator-set={package="substrate-validator-set",  path = "../../frame/validator-set", default-features = false}
 
 [build-dependencies]
 substrate-wasm-builder = { version = "5.0.0-dev", git = "https://github.com/paritytech/substrate", branch = "master" }
@@ -122,6 +124,8 @@ std = [
 	"evm/std",
 	"fp-evm/std",
 	"pallet-evm-auditor/std",
+	"validator-set/std",
+	'pallet-session/std',
 
 ]
 runtime-benchmarks = [

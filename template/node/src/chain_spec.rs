@@ -6,7 +6,7 @@ use sp_core::{sr25519, Pair, Public, H160, U256};
 use sp_finality_grandpa::AuthorityId as GrandpaId;
 use sp_runtime::traits::{IdentifyAccount, Verify};
 
-use frontier_template_runtime::{AccountId, GenesisConfig, Signature, WASM_BINARY};
+use frontier_template_runtime::{AccountId, GenesisConfig, Signature, WASM_BINARY, ValidatorSetConfig, SessionConfig, opaque::SessionKeys};
 
 // The URL for the telemetry server.
 // const STAGING_TELEMETRY_URL: &str = "wss://telemetry.polkadot.io/submit/";
@@ -31,9 +31,21 @@ where
 	AccountPublic::from(get_from_seed::<TPublic>(seed)).into_account()
 }
 
+/*
 /// Generate an Aura authority key.
 pub fn authority_keys_from_seed(s: &str) -> (AuraId, GrandpaId) {
 	(get_from_seed::<AuraId>(s), get_from_seed::<GrandpaId>(s))
+}
+ */
+fn session_keys(aura: AuraId, grandpa: GrandpaId) -> SessionKeys {
+	SessionKeys { aura, grandpa }
+}
+pub fn authority_keys_from_seed(s: &str) -> (AccountId, AuraId, GrandpaId) {
+	(
+		get_account_id_from_seed::<sr25519::Public>(s),
+		get_from_seed::<AuraId>(s),
+		get_from_seed::<GrandpaId>(s)
+	)
 }
 
 pub fn development_config() -> Result<ChainSpec, String> {
@@ -58,7 +70,7 @@ pub fn development_config() -> Result<ChainSpec, String> {
 					get_account_id_from_seed::<sr25519::Public>("Bob//stash"),
 				],
 				// Initial PoA authorities
-				vec![authority_keys_from_seed("Alice")],
+				vec![authority_keys_from_seed("Alice"),authority_keys_from_seed("Bob")],
 				1942,
 			)
 		},
@@ -133,7 +145,7 @@ fn testnet_genesis(
 	wasm_binary: &[u8],
 	sudo_key: AccountId,
 	endowed_accounts: Vec<AccountId>,
-	initial_authorities: Vec<(AuraId, GrandpaId)>,
+	initial_authorities: Vec<(AccountId,AuraId, GrandpaId)>,
 	chain_id: u64,
 ) -> GenesisConfig {
 	use frontier_template_runtime::{
@@ -163,15 +175,28 @@ fn testnet_genesis(
 		},
 		transaction_payment: Default::default(),
 
+		validator_set: ValidatorSetConfig {
+			initial_validators: initial_authorities.iter().map(|x| x.0.clone()).collect::<Vec<_>>(),
+		},
+		session: SessionConfig {
+			keys: initial_authorities.iter().map(|x| {
+				(x.0.clone(), x.0.clone(), session_keys(x.1.clone(), x.2.clone()))
+			}).collect::<Vec<_>>(),
+		},
 		// Consensus
-		aura: AuraConfig {
+		aura: AuraConfig {/*
 			authorities: initial_authorities.iter().map(|x| (x.0.clone())).collect(),
+			 */
+			 authorities: vec![],
 		},
 		grandpa: GrandpaConfig {
+			/*
 			authorities: initial_authorities
 				.iter()
 				.map(|x| (x.1.clone(), 1))
 				.collect(),
+				 */
+				 authorities: vec![],
 		},
 
 		// EVM compatibility
@@ -237,5 +262,7 @@ fn testnet_genesis(
 		dynamic_fee: Default::default(),
 		base_fee: Default::default(),
 		evm_auditor:Default::default(),
+
 	}
 }
+
