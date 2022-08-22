@@ -1,11 +1,11 @@
 [package]
-name = "frontier-template-node"
-version = "0.0.0"
-authors = ["Substrate DevHub <https://github.com/substrate-developer-hub>"]
+name = "wedidchain-node"
+version = "0.0.1"
+authors = ["Topabomb <https://github.com/topabomb/wedid_chain>"]
 edition = "2021"
 license = "Unlicense"
 build = "build.rs"
-description = "A fresh FRAME-based Substrate node, ready for hacking."
+description = "Wedid chain node, ready for hacking."
 publish = false
 
 [package.metadata.docs.rs]
