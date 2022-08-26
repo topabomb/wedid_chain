@@ -120,7 +120,7 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
 	spec_name: create_runtime_str!("wedid_chain_template"),
 	impl_name: create_runtime_str!("wedid_chain_template by topabomb"),
 	authoring_version: 1,
-	spec_version: 4,
+	spec_version: 5,//每次链上更新Runtime时需递增版本号
 	impl_version: 1,
 	apis: RUNTIME_API_VERSIONS,
 	transaction_version: 1,
@@ -406,7 +406,7 @@ impl validator_set::Config for Runtime {
 	type MinAuthorities = MinAuthorities;
 }
 parameter_types! {
-	pub const Period: u32 = 1 * MINUTES;//每Session的大约事件
+	pub const Period: u32 = 5 * MINUTES;//每Session的大约时间
 	pub const Offset: u32 = 0;
 }
 
