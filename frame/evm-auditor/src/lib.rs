@@ -32,9 +32,9 @@ pub use pallet::*;
 use sp_std::{collections::btree_set::BTreeSet, iter::FromIterator, prelude::*};
 use sp_core::{H160, H256, U256};
 
-use evm::{ExitError, ExitReason};
-use fp_evm::{CallInfo, CreateInfo};
-use pallet_evm::{runner::Runner as RunnerT, runner::RunnerError};
+//use evm::{ExitError, ExitReason};
+use fp_evm::{CallInfo, CreateInfo,ExitReason,ExitError};
+use pallet_evm::{runner::Runner as RunnerT, runner::RunnerError,EvmConfig};
 use hex::{FromHex,ToHex};
 
 #[frame_support::pallet]
@@ -117,7 +117,7 @@ pub mod pallet {
 			nonce: Option<U256>,
 			access_list: Vec<(H160, Vec<H256>)>,
 			is_transactional: bool,
-			evm_config: &evm::Config,
+			evm_config: &EvmConfig,
 		) -> Result<(), RunnerError<Self::Error>> {
 			return <pallet_evm::runner::stack::Runner<T>>::validate(
 				source,
@@ -145,7 +145,7 @@ pub mod pallet {
 			access_list: Vec<(H160, Vec<H256>)>,
 			is_transactional: bool,
 			validate: bool,
-			config: &evm::Config,
+			config: &EvmConfig,
 		) -> Result<CallInfo, RunnerError<Self::Error>> {
 			if is_transactional{
 				let source_empty=pallet_evm::Pallet::<T>::is_account_empty(&source);
@@ -181,7 +181,7 @@ pub mod pallet {
 						if resp.len()>0&&resp[resp.len()-1]>0 {
 							log::warn!("❌ Banned it! result.value({:?}),banned({}),source:{} target:{},is_transactional({})",resp,banned,source,target,is_transactional);
 							return Ok(CallInfo{
-								exit_reason:ExitReason::Error(ExitError::InvalidCode),
+								exit_reason:ExitReason::Error(ExitError::Other("Banned.".into())),
 								used_gas:U256::default(),
 								value:Vec::new(),
 								logs:Vec::new(),
@@ -217,7 +217,7 @@ pub mod pallet {
 			access_list: Vec<(H160, Vec<H256>)>,
 			is_transactional: bool,
 			validate: bool,
-			config: &evm::Config,
+			config: &EvmConfig,
 		) -> Result<CreateInfo, RunnerError<Self::Error>> {
 			return <pallet_evm::runner::stack::Runner<T>>::create(
 				source,
@@ -245,7 +245,7 @@ pub mod pallet {
 			access_list: Vec<(H160, Vec<H256>)>,
 			is_transactional: bool,
 			validate: bool,
-			config: &evm::Config,
+			config: &EvmConfig,
 		) -> Result<CreateInfo, RunnerError<Self::Error>> {
 			return <pallet_evm::runner::stack::Runner<T>>::create2(
 				source,
