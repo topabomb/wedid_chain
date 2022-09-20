@@ -116,14 +116,14 @@ pub const VERSION: RuntimeVersion = RuntimeVersion {
 	spec_name: create_runtime_str!("wedid_chain_template"),
 	impl_name: create_runtime_str!("wedid_chain_template by topabomb"),
 	authoring_version: 1,
-	spec_version: 5,//每次链上更新Runtime时需递增版本号
+	spec_version: 6,//每次链上更新Runtime时需递增版本号
 	impl_version: 1,
 	apis: RUNTIME_API_VERSIONS,
 	transaction_version: 1,
 	state_version: 1,
 };
 
-pub const MILLISECS_PER_BLOCK: u64 = 6000;
+pub const MILLISECS_PER_BLOCK: u64 = 6000;//每块的毫秒数
 
 pub const SLOT_DURATION: u64 = MILLISECS_PER_BLOCK;
 
@@ -143,7 +143,7 @@ pub fn native_version() -> sp_version::NativeVersion {
 
 const NORMAL_DISPATCH_RATIO: Perbill = Perbill::from_percent(75);
 /// We allow for 2 seconds of compute with a 6 second average block time.
-pub const MAXIMUM_BLOCK_WEIGHT: Weight = 2 * WEIGHT_PER_SECOND;
+pub const MAXIMUM_BLOCK_WEIGHT: Weight = 3 * WEIGHT_PER_SECOND;//2 * WEIGHT_PER_SECOND;//调整为3秒的计算时间
 const WEIGHT_PER_GAS: u64 = 20_000;
 
 parameter_types! {
@@ -402,7 +402,7 @@ impl validator_set::Config for Runtime {
 	type MinAuthorities = MinAuthorities;
 }
 parameter_types! {
-	pub const Period: u32 = 5 * MINUTES;//每Session的大约时间
+	pub const Period: u32 = 10 * MINUTES;//每Session的大约时间
 	pub const Offset: u32 = 0;
 }
 
