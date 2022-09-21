@@ -47,7 +47,7 @@ jobs:
       - name: build
         run: |
           source "$HOME/.cargo/env"
-          scl enable llvm-toolset-7 "cargo build -r"
+
       - name: Prepare archive
         run: |
           strip target/release/wedidchain-node
