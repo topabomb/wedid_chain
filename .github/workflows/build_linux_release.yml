@@ -26,6 +26,12 @@ jobs:
       # Checks-out your repository under $GITHUB_WORKSPACE, so your job can access it
       - uses: actions/checkout@v3
 
+      - name: Set env on push
+        if: github.event_name == 'push'
+        run: |
+          echo "INPUT_SHA=$(git rev-parse HEAD)" >> $GITHUB_ENV
+          echo "INPUT_TAG=$(git tag --points-at HEAD)" >> $GITHUB_ENV
+
       - name: init rustup
         run: |
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh /dev/stdin -y
@@ -36,9 +42,37 @@ jobs:
           rustup toolchain install nightly
           rustup target add wasm32-unknown-unknown --toolchain nightly
           yum install -y llvm-toolset-7
-          scl enable llvm-toolset-7 bash
       - name: build
         run: |
           source "$HOME/.cargo/env"
           scl enable llvm-toolset-7 bash
           cargo build -r
+      - name: Prepare archive
+        run: |
+          strip target/release/wedidchain-node
+          export ARCHIVE_NAME=wedidchain-node-linux-x64.tar.gz
+          echo "ARCHIVE_NAME=$ARCHIVE_NAME" >> $GITHUB_ENV
+          tar -czvf $ARCHIVE_NAME -C target/release 
+
+      - name: Create release
+        id: create_release
+        uses: actions/create-release@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          tag_name: ${{ env.INPUT_TAG }}
+          release_name: ${{ env.INPUT_TAG }}
+          body: HQ ${{ env.INPUT_TAG }}
+          commitish: ${{ env.INPUT_SHA }}
+          draft: false
+          prerelease: false
+
+      - name: Upload scheduler binary
+        uses: actions/upload-release-asset@v1
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        with:
+          upload_url: ${{ steps.create_release.outputs.upload_url }}
+          asset_path: ${{ env.ARCHIVE_NAME }}
+          asset_name: ${{ env.ARCHIVE_NAME }}
+          asset_content_type: application/tar+gzip
