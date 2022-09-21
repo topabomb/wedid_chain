@@ -29,14 +29,16 @@ jobs:
       - name: init rustup
         run: |
           curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh /dev/stdin -y
-          source "$HOME/.cargo/env"
       - name: install depends
         run: |
           source "$HOME/.cargo/env"
           yum install -y gcc gcc-c++ make automake cmake
           rustup toolchain install nightly
           rustup target add wasm32-unknown-unknown --toolchain nightly
-          yum install llvm-toolset-7
+          yum install -y llvm-toolset-7
           scl enable llvm-toolset-7 bash
       - name: build
-        run: cargo build -r
+        run: |
+          source "$HOME/.cargo/env"
+          scl enable llvm-toolset-7 bash
+          cargo build -r
