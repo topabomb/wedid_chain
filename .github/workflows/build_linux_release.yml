@@ -32,6 +32,7 @@ jobs:
           source "$HOME/.cargo/env"
       - name: install depends
         run: |
+          source "$HOME/.cargo/env"
           yum install -y gcc gcc-c++ make automake cmake
           rustup toolchain install nightly
           rustup target add wasm32-unknown-unknown --toolchain nightly
