@@ -42,6 +42,8 @@ jobs:
           rustup toolchain install nightly
           rustup target add wasm32-unknown-unknown --toolchain nightly
           yum install -y llvm-toolset-7
+      
+      # 注意这里开启了一个新的shell，所以要在bash中执行cargo build
       - name: build
         run: |
           source "$HOME/.cargo/env"
